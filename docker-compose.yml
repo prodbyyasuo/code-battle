@@ -1,0 +1,107 @@
+name: code-battle
+
+services:
+  api:
+    build:
+      context: .
+      target: development
+    command:
+      [
+        "uvicorn",
+        "main:app",
+        "--host",
+        "0.0.0.0",
+        "--port",
+        "8000",
+        "--reload",
+      ]
+    environment:
+      APP_ENV: ${APP_ENV:-local}
+      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-code_battle}:${POSTGRES_PASSWORD:-code_battle}@postgres:5432/${POSTGRES_DB:-code_battle}
+      MONGODB_URL: mongodb://${MONGO_ROOT_USERNAME:-code_battle}:${MONGO_ROOT_PASSWORD:-code_battle}@mongodb:27017/?authSource=admin
+      MONGODB_DATABASE: ${MONGODB_DATABASE:-code_battle_tests}
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/0
+      CELERY_RESULT_BACKEND: redis://redis:6379/1
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-local-only-change-me-please-32-chars}
+    ports:
+      - "${APP_PUBLIC_PORT:-8000}:8000"
+    volumes:
+      - .:/app
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')",
+        ]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+
+  postgres:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-code_battle}
+      POSTGRES_USER: ${POSTGRES_USER:-code_battle}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-code_battle}
+    ports:
+      - "${POSTGRES_PUBLIC_PORT:-5432}:5432"
+    volumes:
+      - postgres18_data:/var/lib/postgresql
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  mongodb:
+    image: mongo:8.0-noble
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USERNAME:-code_battle}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD:-code_battle}
+      MONGO_INITDB_DATABASE: ${MONGODB_DATABASE:-code_battle_tests}
+    ports:
+      - "${MONGO_PUBLIC_PORT:-27017}:27017"
+    volumes:
+      - mongodb_data:/data/db
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "mongosh --quiet --username $${MONGO_INITDB_ROOT_USERNAME} --password $${MONGO_INITDB_ROOT_PASSWORD} --authenticationDatabase admin --eval 'quit(db.adminCommand({ ping: 1 }).ok ? 0 : 2)'",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:8-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "${REDIS_PUBLIC_PORT:-6380}:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  postgres18_data:
+  mongodb_data:
+  redis_data:
