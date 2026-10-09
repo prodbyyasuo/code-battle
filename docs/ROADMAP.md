@@ -52,13 +52,17 @@ Isolated runner containers
 Твоя задача:
 
 1. Создать пакет `app` с модулями `main.py`, `core/config.py`, `api/router.py`,
-   `db/postgres.py`, `db/mongo.py`.
+   `db/postgres.py`, `db/mongo.py`. В каждом Python-каталоге, который является
+   пакетом, добавить `__init__.py`.
 2. Перенести создание приложения в фабрику `create_app()`.
-3. В lifespan создать один async SQLAlchemy engine, один `AsyncMongoClient` и один
-   async Redis client; на shutdown корректно закрыть их.
-4. Сделать `/health/live` без внешних проверок и `/health/ready` с `SELECT 1`, Mongo
+3. В `core/config.py` хранить только типизированные настройки. SQLAlchemy engine и
+   session factory определить в `db/postgres.py`, используя
+   `settings.database_url`; не создавать сетевые ресурсы внутри `Settings`.
+4. В lifespan инициализировать один async SQLAlchemy engine, один
+   `AsyncMongoClient` и один async Redis client; на shutdown корректно закрыть их.
+5. Сделать `/health/live` без внешних проверок и `/health/ready` с `SELECT 1`, Mongo
    `ping` и Redis `ping`.
-5. Подключить единый обработчик доменных ошибок и request-id middleware.
+6. Подключить единый обработчик доменных ошибок и request-id middleware.
 
 Критерий готовности: приложение стартует локально и в Compose, readiness становится
 успешным только после готовности всех хранилищ, Ruff/mypy/pytest зелёные.
