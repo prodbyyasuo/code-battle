@@ -56,6 +56,21 @@ class Settings(BaseSettings):
     jwt_algorithm: Literal["HS256"] = "HS256"
     jwt_access_token_expire_minutes: int = Field(default=30, gt=0)
     jwt_refresh_token_expire_days: int = Field(default=30, gt=0)
+    jwt_email_verification_expire_hours: int = Field(default=24, gt=0)
+    jwt_password_reset_expire_minutes: int = Field(default=30, gt=0)
+    jwt_issuer: str = "code-battle"
+    jwt_audience: str = "code-battle-api"
+
+    auth_rate_limit_requests: int = Field(default=10, gt=0)
+    auth_rate_limit_window_seconds: int = Field(default=60, gt=0)
+
+    frontend_url: str = "http://localhost:3000"
+    smtp_host: str | None = None
+    smtp_port: int = Field(default=587, ge=1, le=65535)
+    smtp_username: str | None = None
+    smtp_password: SecretStr | None = None
+    smtp_from_email: str = "noreply@code-battle.local"
+    smtp_use_tls: bool = True
 
     cors_allow_origins: list[str] = Field(
         default_factory=lambda: ["http://localhost:3000"]

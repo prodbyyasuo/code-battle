@@ -61,8 +61,8 @@ markers = [
     "integration: tests requiring external services",
 ]
 asyncio_mode = "auto"
-asyncio_default_fixture_loop_scope = "function"
-asyncio_default_test_loop_scope = "function"
+asyncio_default_fixture_loop_scope = "session"
+asyncio_default_test_loop_scope = "session"
 
 [tool.ruff.lint.per-file-ignores]
 "migrations/versions/*.py" = ["E501"]

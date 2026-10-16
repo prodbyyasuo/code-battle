@@ -20,8 +20,7 @@ def _contains_duplicate_key(error: BulkWriteError) -> bool:
     write_errors = error.details.get("writeErrors", ())
 
     return any(
-        write_error.get("code") == 11000
-        for write_error in write_errors
+        write_error.get("code") == 11000 for write_error in write_errors
     )
 
 

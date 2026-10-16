@@ -1,6 +1,9 @@
 """Repository-layer exceptions."""
 
+from typing import Literal
 from uuid import UUID
+
+type UserConflictField = Literal["email", "username"]
 
 
 class RepositoryError(Exception):
@@ -21,3 +24,14 @@ class TestCaseSetAlreadyExistsError(RepositoryError):
             f"Test-case set already exists for problem "
             f"{problem_id}, revision {revision}"
         )
+
+
+class UserAlreadyExistsError(RepositoryError):
+    """A user with the unique field already exists."""
+
+    def __init__(
+        self,
+        field: UserConflictField,
+    ) -> None:
+        self.field = field
+        super().__init__(f"User with this {field} already exists")
